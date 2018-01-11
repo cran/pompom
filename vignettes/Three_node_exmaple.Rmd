@@ -1,0 +1,379 @@
+---
+title: Three-node Example to Compute iRAM (impulse response analysis metric)
+author: Written by Xiao Yang
+date: Fall, 2017 
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{3-node-example}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+### Overview
+We created an R package named "pompom" (person-oriented modeling and perturbation on the model), and we will use the functions in "pompom" to compute iRAM (impulse response analysis metric) in this tutorial. 
+
+iRAM is built upon a hybrid method that combines intraindividual variability methods and network analysis methods in order to model individuals as high-dimensional dynamic systems. This hybrid method is designed and tested to quantify the extent of interaction in a high-dimensional multivariate system, and applicable on experience sampling data. 
+
+Note: please install the package "pompom", before running the code in this tutorial. 
+
+
+This turorial corresponds to the following paper (under review):
+Yang et al. Impulse Response Analysis Metric (iRAM): 
+Merging Intraindividual Variability, Network Analysis and Experience Sampling
+
+### Outline of Tutorial
+1. Prepare simulation of time-series data
+2. Apply Intraindividual Variability Method (unified Structural SEM, uSEM) on multivariate time-series data 
+3. Apply a network analysis method (also called impulse reponse analysis) on person-specific network
+4. Calculate impulse response analysis metric (iRAM)
+
+
+### Step 1. Prepare simulation of time-series data
+```{r, message = FALSE, warning = FALSE}
+library(pompom)
+library(ggplot2)
+library(qgraph)
+require(reshape2)
+set.seed(1234)
+```
+
+
+#### Set up a 3 node model
+
+The 3-node network is a hypothetical example used for the purpose of illustration. As explained in the paper, the variables in time-series data are nodes and the temporal relations are edges, in the network terminology. 
+
+
+
+```{r, warning = FALSE}
+
+n.obs <- 200 # number of observation
+p <- 3 # number of variables
+noise.level <- 0.1
+epsilon <- cbind(rnorm(n.obs,0, noise.level), 
+             rnorm(n.obs,0, noise.level), 
+             rnorm(n.obs,0, noise.level)) # 3 time-series of noise for 3 variables
+
+true.beta <-  matrix(c(0,0,0,0,0,0,
+                       0,0,0,0,0,0,
+                       0,0,0,0,0,0,
+                       0.2,0,0.25,0,0,0.6, 
+                       0,0.3,0,-0.2,0,-0.6, 
+                       0,-0.2,0.3,0,0,0), 
+                     nrow = 2 * p, 
+                     ncol = 2 * p, 
+                     byrow = TRUE)
+
+contemporaneous.relations <- matrix(true.beta[(p+1):(2*p),(p+1):(2*p)], nrow = p, ncol = p, byrow = F)
+lag.1.relations <- matrix(true.beta[(p+1):(2*p),1:p], nrow = p, ncol = p, byrow = F)
+
+```
+
+
+True model is: 
+```{r, warning = FALSE}
+true.beta
+```
+
+
+#### Network graph
+To introduce the terminologies of networks, each of the 3 variables is depicted as a node (circle), and the temporal relations among the nodes are depicted as edges (arrows, and the arrow indicate directionality of the temporal relationship), with color indicating sign of relation (green = positive, red = negative), thickness indicating strength of relation, and line shape indicating temporality of the association (dashed = lag-1, solid = contemporaneous). Lag-1 relations mean the temporal relations between variables from measurement t -1 to the measurement t, and contemporaneous relations means the temporal relations between variables within the same measurement.
+
+```{r, fig.width = 8, fig.height =6}
+plot_network_graph(true.beta, p)
+```
+
+
+#### Simulate time-series
+Time series was simulated based on the temporal relations and process noise. Our hypohetical 3-node newtork was using simulated data based on a pre-defined temporal relationship matrix and process noise. The temporal relationship is as follows, and process noise is at Mean = 0, SD = .1.
+
+$\eta(t) = (I-\ A \ )^{-1}\Phi\eta(t-1) + (I-\ A \ )^{-1}\epsilon(t)$
+
+where $\ A$ is the block of contemporaneous relations (southeast block of the beta matrix),
+
+$\Phi$ is the block of lag-1 relations (southwest block of the beta matrix),
+
+$\epsilon$ is the process noise.
+
+
+We simulated 200 occasions to represent 200 repeated measurements of the three variables in the real studies. 
+
+
+```{r, warning = FALSE}
+time.series <- matrix(rep(0, p * n.obs), nrow = n.obs, ncol = p)
+time.series[1,] <- rnorm(p,0,1)
+
+row <- p
+for (row in 2:n.obs)
+{
+  time.series[row,] <- solve(diag(1,p, p) - contemporaneous.relations) %*%
+    lag.1.relations %*% time.series[row-1,] +
+    solve(diag(1,p, p) - contemporaneous.relations) %*% epsilon[row, ]
+}
+time.series <- data.frame(time.series)
+names(time.series) <- c("happy", "sad", "other.communion")
+```
+
+
+#### Plot the simulated time-series 
+
+```{r, fig.width = 8, fig.height =6}
+time.series$time <- seq(1,length(time.series[,1]),1)
+
+time.series.long <- melt(time.series, id="time")  ## convert to long format
+
+ggplot(data=time.series.long,
+       aes(x=time, y=value, colour=variable)) +
+  geom_line() + 
+  facet_wrap( ~ variable  ,  ncol = 1) +
+  scale_y_continuous(breaks = seq(0, 100, by = 50)) + 
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank(),
+    strip.text.y = element_blank(),
+    axis.text.y = element_text(), 
+    axis.title.y = element_blank()
+    )+
+  ylim(-1,1)
+time.series$time <- NULL
+```
+
+
+
+
+### Step 2. Apply Intraindividual Variability Method (unified Structural SEM, uSEM) on multivariate time-series data 
+
+#### Use uSEM to fit the model and parse parameters. 
+
+The model fit summary will give \Beta and \Psi estimates, which are essential information to conduct network analysis later. The model fit summary also gives the fit statistics. 
+
+Parameters of the "uSEM" function:
+
+var.number: number of variables, 13 in this case. 
+
+time.series: multivariate time-series data in the long format (every row is a measurement, and every column is a variable). Note: scaling is not absolutely necessary, but it can be helpful when some variables have small variances. 
+
+lag.order: number of lags in the uSEM model. Default is 1.  
+
+verbose: default at FALSE. If TRUE, it will print the top five largest modification indices in the lavaan model of each iteration. 
+
+trim: default at TRUE. If TRUE, it will trim the final model, eliminating all the insignificant temporal relations. 
+
+```{r, fig.width = 8, fig.height =6}
+var.number <- p # number of variables
+lag.order <- 1 # lag order of the model
+
+model.fit <- uSEM(var.number, 
+                  time.series,
+                  lag.order, 
+                  verbose = FALSE, 
+                  trim = TRUE)
+
+```
+
+Now the uSEM model result is in the object "model.fit", including beta matrix, psi matrix, and fit statistics. Next, we need to parse the model.fit object into beta matrix and plot the estimated network graph. 
+
+
+```{r, fig.width = 8, fig.height =6}
+beta.matrix <- parse_beta(var.number = p, 
+                          model.fit = model.fit, 
+                          lag.order = 1, 
+                          matrix = TRUE) # parse temporal relations in matrix format
+
+plot_network_graph(beta.matrix$est, 
+                   var.number)
+
+```
+
+estimated beta0 = 
+```{r, warning = FALSE}
+beta.matrix$est
+beta.matrix$se
+```
+
+
+The "model_summary" function will return an object that contains beta, psi and fit statistics, shown in the following code chunks.
+
+```{r}
+mdl <- model_summary(model.fit, 
+                     var.number, 
+                     lag.order)
+
+mdl$beta
+mdl$beta.se
+mdl$psi
+```
+
+Model fit
+
+Model fit should obey a 3 out of 4 rule (CFI and TLI should be at least .95, and RMSEA and SRMR should be no greater than .08). 
+
+
+
+```{r}
+mdl$cfi
+mdl$tli
+mdl$rmsea
+mdl$srmr
+```
+
+### Step 3. Apply a network analysis method (also called impulse reponse analysis) on person-specific network
+
+Conceptually, impulse response analysis is to perturb the system (the whole psychological network we estimated) by one node (or multiple nodes, but since this model is linear, the multiple nodes scenario is additive of the single node impulse. Thus one can conduct impulse response analysis in either way and get equivalent result). After the system receives such perturbation, or impulse, the impulse will reverbate through the network based on the statistical relationship. 
+
+For example, one estimated sadness can be predicted by -0.35 happiness + 0.2 anger - 0.6 self-esteem, if happiness or anger/self-esteem received a perturbation, then one can deduct what is the value of sadness for the next step, and we can also deduct value of other nodes in the same way. So one can have a time profile per node after the perturbation. Time profile is the trajectory of a variable after the system received the perturbation. 
+
+This method will give an intuitive view of the dynamic behavior of a network, in complimentary of the static newtork configuration (e.g. density, centrality, clustering, etc). 
+
+Since uSEM estimated contemporaneous relations as well, we transformed the contemporaneous relations back to a traditional lagged format, so that one can conduct impulse response analysis. Details of mathematical deduction is shown in Gates et al. (2010). 
+
+#### Set parameters for impulse response analysis
+```{r, warning = FALSE}
+steps <- 100 # number of steps to generate time profile 
+replication <- 200 # number of repilcations in bootstrap 
+threshold <- .01 # setting threshold for approximate asymptote (iRAM calculation)
+```
+
+### Step 4. Calculate impulse response analysis metric (iRAM)
+
+#### Point estimation of iRAM
+
+```{r, fig.width = 8, fig.height =6, warning = F}
+# ponit estimate of iRAM 
+point.estimate.iRAM <- iRAM(model.fit, 
+                            beta = NULL, 
+                            var.number = var.number, 
+                            lag.order = lag.order, 
+                            threshold = threshold,
+                            boot = FALSE, 
+                            replication = replication,
+                            steps= steps)
+
+point.estimate.iRAM$recovery.time 
+# point.estimate.iRAM$time.series.data
+```
+
+#### Plot time profile
+
+```{r, fig.width = 8, fig.height =6, warning = F}
+plot_time_profile(point.estimate.iRAM$time.series.data, 
+                  var.number = 3,
+                  threshold = threshold, 
+                  xupper = 50)
+```
+
+
+
+#### Bootstraped iRAM
+
+```{r, warning = FALSE}
+
+bootstrap.iRAM <- iRAM(model.fit, 
+                       beta = NULL, 
+                       var.number = var.number, 
+                       lag.order = lag.order,
+                       threshold = threshold,
+                       boot = TRUE, 
+                       replication = replication,
+                       steps= steps
+                       )
+
+bootstrap.iRAM$mean
+bootstrap.iRAM$upper
+bootstrap.iRAM$lower
+```
+
+#### Plot boostrapped time profiles
+
+```{r, fig.width = 8, fig.height =6, warning = F}
+plot_time_profile(bootstrap.iRAM$time.profile.data, 
+                  var.number = 3,
+                  threshold = threshold, 
+                  xupper = 25)
+
+```
+
+
+#### Plot boostrapped iRAM distribution
+
+```{r, fig.width = 8, fig.height =6, warning = F}
+plot_iRAM_dist(bootstrap.iRAM$recovery.time.reps)
+```
+
+
+#### Check accuracy of iRAM estimation
+
+```{r, warning = FALSE, fig.width = 8, fig.height =6}
+true.iRAM <- iRAM(
+  model.fit= NULL,
+  beta = true.beta, 
+  var.number = var.number, 
+  lag.order = lag.order, 
+  threshold = threshold,
+  boot = FALSE, 
+  replication = replication,
+  steps= steps)
+
+
+plot_time_profile(true.iRAM$time.series.data, 
+                  var.number = 3,
+                  threshold = threshold, 
+                  xupper = 25)
+
+```
+
+
+```{r}
+
+sum.diff <- 0
+for (row in 1:nrow(bootstrap.iRAM$recovery.time))
+{
+  sum.diff <- sum.diff + (bootstrap.iRAM$recovery.time.reps[row,] -
+    c(true.iRAM$recovery.time[1,], 
+      true.iRAM$recovery.time[2,], 
+      true.iRAM$recovery.time[3,]))^2
+}
+RMSE <- sqrt(sum.diff/nrow(bootstrap.iRAM$recovery.time))
+
+
+sum.diff <- 0
+for (row in 1:nrow(bootstrap.iRAM$recovery.time))
+{
+  sum.diff <- sum.diff + (bootstrap.iRAM$recovery.time.reps[row,] -
+    c(true.iRAM$recovery.time[1,], 
+      true.iRAM$recovery.time[2,], 
+      true.iRAM$recovery.time[3,]))/
+    (c(true.iRAM$recovery.time[1,], 
+      true.iRAM$recovery.time[2,], 
+      true.iRAM$recovery.time[3,]))
+}
+RB <- 1/nrow(bootstrap.iRAM$recovery.time) * sum.diff
+
+SD <- NULL
+for (col in 1:(var.number^2))
+{
+  SD <- cbind(SD, sd(bootstrap.iRAM$recovery.time.reps[,col]))
+}
+
+  
+```
+
+#### Summary statistics
+
+true.iRAM: iRAM calculated based on true beta matrix. 
+
+boostrap.iRAM$mean: the iRAM calcualted across bootstrapped replications. 
+
+RMSE: root mean squared error of the estimated iRAM compared with true iRAM across bootstrapped replications. 
+
+RB: relative bias, mean of summed difference between the estimated iRAM and the true iRAM across bootstrapped replications. 
+
+SD: standard deviation of the estimated iRAM across bootstrapped replications. 
+
+```{r}
+# metrics
+true.iRAM$recovery.time # true value
+bootstrap.iRAM$mean # estimated mean
+RMSE
+RB
+SD 
+```

@@ -417,3 +417,53 @@ iRAM <- function(model.fit,
 }
 
 
+#' Generate iRAM (impulse response anlaysis metric) in the equilibrium form.
+#'
+#'
+#' @param beta.matrix beta matrix for a point estimate
+#' @param var.number number of variables in the time series
+#' @param lag.order lag order of the model to be fit
+#'
+#' @return a list of equilibria. First numeric number in the variable name indicate  where the impulse was given, and the second numeric number indicate the response, e.g., e12 indicates equilibrium of node 2 when node 1 is given an impulse.
+#'
+#' @examples
+#' \dontshow{
+#' iRAM_evalue <- iRAM_equilibrium(beta.matrix = true_beta_3node,
+#'     var.number = 3,
+#'     lag.order = 1
+#'     )
+#' iRAM_evalue
+#' }
+#' \donttest{
+#' iRAM_evalue <- iRAM_equilibrium(beta.matrix = true_beta_3node,
+#'     var.number = 3,
+#'     lag.order = 1
+#'     )
+#' iRAM_evalue
+#' }
+#'
+#'
+#' @export
+#'
+#'
+iRAM_equilibrium <- function(beta.matrix, var.number, lag.order)
+{
+  phi <- as.matrix(beta.matrix[(var.number+1):(2*var.number),1:var.number])  # lag-1 relations
+  alpha <- as.matrix(beta.matrix[(var.number+1):(2*var.number),(var.number+1):(2*var.number)]) # contemporaneous relations
+  coeff.mat <- solve(diag(var.number)-alpha) %*% phi
+
+  equilibrium.mat <- coeff.mat %*% solve(diag(var.number) - coeff.mat) %*%
+    solve(diag(var.number)-alpha) %*% diag(var.number)
+
+  equilibrium.list <- t(as.vector(equilibrium.mat))
+  equilibrium.list <- data.frame(equilibrium.list)
+
+  for (first.index in 1:var.number){
+    for(second.index in 1:var.number)
+    {
+      names(equilibrium.list)[ var.number * (first.index - 1) + second.index] <-
+        paste("e", first.index, second.index, sep = "")
+    }
+  }
+  return (equilibrium.list)
+}

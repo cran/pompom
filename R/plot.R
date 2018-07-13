@@ -91,8 +91,6 @@ plot_time_profile <- function(time.series.data,
           axis.line = element_line(color = 'black')
         ))
   }
-
-
   # return (p)
   return(NULL)
 }
@@ -211,4 +209,65 @@ plot_network_graph <- function(beta, var.number)
            edge.width = 2)
   }
   return(NULL)
+}
+
+
+
+
+
+#' Plot the time profiles in the integrated form
+#'
+#' @param beta.matrix matrix of temporal relations, cotaining both lag-1 and contemporaneous
+#' @param var.number number of variables in the time series
+#' @param lag.order lag order of the model to be fit
+#'
+#' @return NULL
+#'
+#' @examples
+#' \dontshow{
+#' plot_integrated_time_profile(beta.matrix = true_beta_3node,
+#'                   var.number = 3,
+#'                   lag.order = 1)
+#' }
+#'
+#' \donttest{
+#' plot_integrated_time_profile(beta.matrix = true_beta_3node,
+#'                   var.number = 3,
+#'                   lag.order = 1)
+#' }
+#'
+#' @export
+#'
+#'
+plot_integrated_time_profile <- function(beta.matrix ,
+                                         var.number ,
+                                         lag.order = 1)
+{
+  # this generates the time series data of difference score (output in "iRAM_ts$time.series.data")
+  iRAM_ts <- iRAM(model.fit = NULL,
+                  beta = beta.matrix,
+                  var.number = var.number,
+                  lag.order = lag.order,
+                  threshold = 0.01,
+                  boot = FALSE,
+                  replication = 200,
+                  steps = 100)
+
+  # integrate the time series data of difference score
+  iRAM_ts_integrated <- iRAM_ts$time.series.data
+  iRAM_ts_integrated[1,2:ncol(iRAM_ts_integrated)] <- rep(0,ncol(iRAM_ts_integrated) - 1) # make integrated value = 0 at t = 1
+
+  # integration starting from t = 2, to remove the given impulse value
+  for (index in 3:nrow(iRAM_ts_integrated))
+  {
+    iRAM_ts_integrated[index,2:ncol(iRAM_ts_integrated)] <-
+      iRAM_ts_integrated[index-1,2:ncol(iRAM_ts_integrated)] +
+      iRAM_ts_integrated[index,2:ncol(iRAM_ts_integrated)]
+  }
+
+  plot_time_profile(iRAM_ts_integrated,
+                    var.number = var.number,
+                    threshold = 0,
+                    xupper = 50)
+  return (NULL)
 }

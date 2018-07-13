@@ -1,5 +1,5 @@
-8742fdd60de320396eb8afc0b3b9097c *DESCRIPTION
-474d9f1cf967a05e6a27ce2aca3e7870 *NAMESPACE
+29eff5d7f521b46889da9da8b91b876d *DESCRIPTION
+abbce4c0030cc6d154aa454f4b783d9d *NAMESPACE
 bf6b66a7badcda2150d3daaf988b0ce1 *R/data-bootstrapped_iRAM_2node.R
 01009fe08a0b4a02b1d4eabd96cbc20e *R/data-bootstrapped_iRAM_3node.R
 587bd24ec063d8c27df133d2a3780f61 *R/data-simts_2node.R
@@ -7,9 +7,9 @@ bf6b66a7badcda2150d3daaf988b0ce1 *R/data-bootstrapped_iRAM_2node.R
 a63d43f915c6a9ece6f00a1a89ba8014 *R/data-true_beta_2node.R
 79ed2867528bb89044389e63acb7d734 *R/data-true_beta_3node.R
 a20c85306e89a39f8af06987f98ba3e3 *R/data-usemmodelfit.R
-ce9d4f45cbad91608dd27d5597f4596b *R/impulse_response.R
+e7d49962dd997d6867eebc571846e454 *R/impulse_response.R
 dbde89c44ada379100d665c04915a571 *R/misc.R
-8c64fbe09348d269f74bc06d0e93104a *R/plot.R
+b9a0d3d355db0bfc72944ceedc6c3e8c *R/plot.R
 a85b4cbcff35cd0a71298e0b3719ae2a *R/uSEM.R
 bb5f8e276fdbbf834f4896cc03a955fa *README.md
 d75480c54e77dca475f3af2e2bc7bc62 *build/vignette.rds
@@ -21,15 +21,17 @@ b2e907099411242c844bee4a2cec7346 *data/simts_2node.RData
 a11f966cca04f40d440ae6a3acd4d4f5 *data/true_beta_2node.RData
 6a3c47dd317178e96d52e3ec447b3b26 *data/true_beta_3node.RData
 04899dba414207e139d22ef5760cb2c2 *data/usemmodelfit.RData
-3285cad0b9f5f0b26d3c374c9bde4bbf *inst/doc/Three_node_exmaple.R
-9bd80a1756e34ac5b33b6630cc60a29b *inst/doc/Three_node_exmaple.Rmd
-420685458c3175f16a71723b9ead96ce *inst/doc/Three_node_exmaple.html
+b24c90d08971aa6023b2630d0c1060b7 *inst/doc/Three_node_exmaple.R
+cda8bb912976e0066d55be33fadee7a8 *inst/doc/Three_node_exmaple.Rmd
+6453c851f3d37d5aa556499a6b5e387b *inst/doc/Three_node_exmaple.html
 10c7562b93adf2c2b28422775f5867b0 *man/bootstrap_iRAM_2node.Rd
 b7b5641810fd0ba966e0f827590d8fc6 *man/bootstrap_iRAM_3node.Rd
 d6f59771331c89e399cdd1b4fd655d92 *man/iRAM.Rd
+77f8c1cfed649a00cd81c8a83a0d6956 *man/iRAM_equilibrium.Rd
 d6b5bb5069af3c789120dabb258b3d72 *man/model_summary.Rd
 b1eb5581563bda1cc5dc3b1582c35461 *man/parse_beta.Rd
 2808cc7642e88b64d4732b38f96fa269 *man/plot_iRAM_dist.Rd
+a839d82963eb72dd26a4264c08460aea *man/plot_integrated_time_profile.Rd
 c55481eb404942136e8dfd18bab1c086 *man/plot_network_graph.Rd
 70fd97c48d418c88496f5204f5cef7f4 *man/plot_time_profile.Rd
 74278ee850c01ae062246c021914fa94 *man/simts_2node.Rd
@@ -38,4 +40,4 @@ f1e28a81f58baec0984b05fb414d09fa *man/true_beta_2node.Rd
 fd154cf5fe2df620ef27ed7dc8721893 *man/true_beta_3node.Rd
 1c843c71bb0975bcadfd73493f62f0ab *man/uSEM.Rd
 5752ea37b988a07dcb78dcebf7fd70c5 *man/usemmodelfit.Rd
-9bd80a1756e34ac5b33b6630cc60a29b *vignettes/Three_node_exmaple.Rmd
+cda8bb912976e0066d55be33fadee7a8 *vignettes/Three_node_exmaple.Rmd

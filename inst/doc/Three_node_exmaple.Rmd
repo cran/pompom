@@ -1,7 +1,7 @@
 ---
 title: Three-node Example to Compute iRAM (impulse response analysis metric)
 author: Written by Xiao Yang
-date: Fall, 2017 
+date: Last updated July, 2018
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{3-node-example}
@@ -110,7 +110,7 @@ for (row in 2:n.obs)
     solve(diag(1,p, p) - contemporaneous.relations) %*% epsilon[row, ]
 }
 time.series <- data.frame(time.series)
-names(time.series) <- c("happy", "sad", "other.communion")
+names(time.series) <- c("x", "y", "z")
 ```
 
 
@@ -128,12 +128,30 @@ ggplot(data=time.series.long,
   scale_y_continuous(breaks = seq(0, 100, by = 50)) + 
   theme(
     strip.background = element_blank(),
-    strip.text.x = element_blank(),
-    strip.text.y = element_blank(),
-    axis.text.y = element_text(), 
-    axis.title.y = element_blank()
+    panel.background = element_blank(),
+    legend.title =   element_blank(),
+    
+    # strip.text.x = element_blank(),
+    # strip.text.y = element_blank(),
+    # axis.text.y = element_text(),
+    # axis.title.y = element_blank()
+    
+    legend.key = element_blank(),
+    legend.position = "none",
+    # legend.title =   element_blank(),
+    # panel.background = element_blank(),
+    axis.text.y=element_text(color="black",size=12),
+    axis.text.x=element_text(color="black",size=12),
+    axis.title.y=element_text(color="black",size=12),
+    axis.title.x=element_text(color="black",size=12),
+    axis.line = element_line(color = 'black')
+                                 
     )+
-  ylim(-1,1)
+  ylim(-1,1)+
+  xlab("Time") +
+  ylab("Value")
+
+  
 time.series$time <- NULL
 ```
 
@@ -377,3 +395,30 @@ RMSE
 RB
 SD 
 ```
+
+#### Integrated form of impulse respnose analysis
+
+Sometimes the raw time-series data is non-stationary (e.g., the absolute value of auto-regression is close to or above 1), and one way to model the dynamics is to take the difference score of the time-series and then model the difference scores.
+
+In this case, the temporal relations are describing how the difference score are predicting one another, so the above steps still applies. When conducting impulse response analysis, the equilibrium of the integrated form of time profile can also be computed and plotted. 
+
+#### Compute the equilibrium 
+
+```{r, fig.width = 8, fig.height =6, warning = F}
+iRAM_equilibrium_value <- iRAM_equilibrium(beta = mdl$beta,
+                         var.number = var.number, 
+                         lag.order = lag.order)
+
+iRAM_equilibrium_value
+```
+
+#### Plot the time profile in the integrated form
+
+```{r, fig.width = 8, fig.height =6, warning = F}
+plot_integrated_time_profile(beta.matrix = mdl$beta, 
+                             var.number = 3, 
+                             lag.order = 1)
+```
+
+
+

@@ -46,7 +46,7 @@ for (row in 2:n.obs)
     solve(diag(1,p, p) - contemporaneous.relations) %*% epsilon[row, ]
 }
 time.series <- data.frame(time.series)
-names(time.series) <- c("happy", "sad", "other.communion")
+names(time.series) <- c("x", "y", "z")
 
 ## ---- fig.width = 8, fig.height =6---------------------------------------
 time.series$time <- seq(1,length(time.series[,1]),1)
@@ -60,12 +60,30 @@ ggplot(data=time.series.long,
   scale_y_continuous(breaks = seq(0, 100, by = 50)) + 
   theme(
     strip.background = element_blank(),
-    strip.text.x = element_blank(),
-    strip.text.y = element_blank(),
-    axis.text.y = element_text(), 
-    axis.title.y = element_blank()
+    panel.background = element_blank(),
+    legend.title =   element_blank(),
+    
+    # strip.text.x = element_blank(),
+    # strip.text.y = element_blank(),
+    # axis.text.y = element_text(),
+    # axis.title.y = element_blank()
+    
+    legend.key = element_blank(),
+    legend.position = "none",
+    # legend.title =   element_blank(),
+    # panel.background = element_blank(),
+    axis.text.y=element_text(color="black",size=12),
+    axis.text.x=element_text(color="black",size=12),
+    axis.title.y=element_text(color="black",size=12),
+    axis.title.x=element_text(color="black",size=12),
+    axis.line = element_line(color = 'black')
+                                 
     )+
-  ylim(-1,1)
+  ylim(-1,1)+
+  xlab("Time") +
+  ylab("Value")
+
+  
 time.series$time <- NULL
 
 ## ---- fig.width = 8, fig.height =6---------------------------------------
@@ -218,4 +236,16 @@ bootstrap.iRAM$mean # estimated mean
 RMSE
 RB
 SD 
+
+## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+iRAM_equilibrium_value <- iRAM_equilibrium(beta = mdl$beta,
+                         var.number = var.number, 
+                         lag.order = lag.order)
+
+iRAM_equilibrium_value
+
+## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+plot_integrated_time_profile(beta.matrix = mdl$beta, 
+                             var.number = 3, 
+                             lag.order = 1)
 

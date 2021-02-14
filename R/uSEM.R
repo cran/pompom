@@ -249,7 +249,8 @@ uSEM <- function(var.number, data, lag.order = 1, verbose = FALSE, trim = FALSE)
       # only keep the lower block in the modification indices
       beta.mi$lhs.number <-  as.numeric(gsub("eta","", beta.mi$lhs))
       beta.mi <- beta.mi[beta.mi$lhs.number > lag.order * var.number,]
-      beta.mi.ordered <-  beta.mi[order(-beta.mi$mi),]
+      # beta.mi.ordered <-  beta.mi[order(-beta.mi$mi),]
+      beta.mi.ordered <-  beta.mi[sort.list(-beta.mi$mi),]
 
       largest.path <- find.path.to.free.up(beta.mi = beta.mi.ordered,
                                              model.syntax = model.syntax,

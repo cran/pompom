@@ -1,11 +1,11 @@
-## ---- message = FALSE, warning = FALSE-----------------------------------
+## ---- message = FALSE, warning = FALSE----------------------------------------
 library(pompom)
 library(ggplot2)
 library(qgraph)
 require(reshape2)
 set.seed(1234)
 
-## ---- warning = FALSE----------------------------------------------------
+## ---- warning = FALSE---------------------------------------------------------
 
 n.obs <- 200 # number of observation
 p <- 3 # number of variables
@@ -28,13 +28,13 @@ contemporaneous.relations <- matrix(true.beta[(p+1):(2*p),(p+1):(2*p)], nrow = p
 lag.1.relations <- matrix(true.beta[(p+1):(2*p),1:p], nrow = p, ncol = p, byrow = F)
 
 
-## ---- warning = FALSE----------------------------------------------------
+## ---- warning = FALSE---------------------------------------------------------
 true.beta
 
-## ---- fig.width = 8, fig.height =6---------------------------------------
+## ---- fig.width = 8, fig.height =6--------------------------------------------
 plot_network_graph(true.beta, p)
 
-## ---- warning = FALSE----------------------------------------------------
+## ---- warning = FALSE---------------------------------------------------------
 time.series <- matrix(rep(0, p * n.obs), nrow = n.obs, ncol = p)
 time.series[1,] <- rnorm(p,0,1)
 
@@ -48,7 +48,7 @@ for (row in 2:n.obs)
 time.series <- data.frame(time.series)
 names(time.series) <- c("x", "y", "z")
 
-## ---- fig.width = 8, fig.height =6---------------------------------------
+## ---- fig.width = 8, fig.height =6--------------------------------------------
 time.series$time <- seq(1,length(time.series[,1]),1)
 
 time.series.long <- melt(time.series, id="time")  ## convert to long format
@@ -86,18 +86,19 @@ ggplot(data=time.series.long,
   
 time.series$time <- NULL
 
-## ---- fig.width = 8, fig.height =6---------------------------------------
+## ---- fig.width = 8, fig.height =6--------------------------------------------
 var.number <- p # number of variables
 lag.order <- 1 # lag order of the model
 
 model.fit <- uSEM(var.number, 
                   time.series,
                   lag.order, 
-                  verbose = FALSE, 
+                  # verbose = FALSE, #published code
+                  verbose = TRUE, #test
                   trim = TRUE)
 
 
-## ---- fig.width = 8, fig.height =6---------------------------------------
+## ---- fig.width = 8, fig.height =6--------------------------------------------
 beta.matrix <- parse_beta(var.number = p, 
                           model.fit = model.fit, 
                           lag.order = 1, 
@@ -107,11 +108,11 @@ plot_network_graph(beta.matrix$est,
                    var.number)
 
 
-## ---- warning = FALSE----------------------------------------------------
+## ---- warning = FALSE---------------------------------------------------------
 beta.matrix$est
 beta.matrix$se
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 mdl <- model_summary(model.fit, 
                      var.number, 
                      lag.order)
@@ -120,18 +121,18 @@ mdl$beta
 mdl$beta.se
 mdl$psi
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 mdl$cfi
 mdl$tli
 mdl$rmsea
 mdl$srmr
 
-## ---- warning = FALSE----------------------------------------------------
+## ---- warning = FALSE---------------------------------------------------------
 steps <- 100 # number of steps to generate time profile 
 replication <- 200 # number of repilcations in bootstrap 
 threshold <- .01 # setting threshold for approximate asymptote (iRAM calculation)
 
-## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+## ---- fig.width = 8, fig.height =6, warning = F-------------------------------
 # ponit estimate of iRAM 
 point.estimate.iRAM <- iRAM(model.fit, 
                             beta = NULL, 
@@ -145,13 +146,13 @@ point.estimate.iRAM <- iRAM(model.fit,
 point.estimate.iRAM$recovery.time 
 # point.estimate.iRAM$time.series.data
 
-## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+## ---- fig.width = 8, fig.height =6, warning = F-------------------------------
 plot_time_profile(point.estimate.iRAM$time.series.data, 
                   var.number = 3,
                   threshold = threshold, 
                   xupper = 50)
 
-## ---- warning = FALSE----------------------------------------------------
+## ---- warning = FALSE---------------------------------------------------------
 
 bootstrap.iRAM <- iRAM(model.fit, 
                        beta = NULL, 
@@ -167,17 +168,17 @@ bootstrap.iRAM$mean
 bootstrap.iRAM$upper
 bootstrap.iRAM$lower
 
-## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+## ---- fig.width = 8, fig.height =6, warning = F-------------------------------
 plot_time_profile(bootstrap.iRAM$time.profile.data, 
                   var.number = 3,
                   threshold = threshold, 
                   xupper = 25)
 
 
-## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+## ---- fig.width = 8, fig.height =6, warning = F-------------------------------
 plot_iRAM_dist(bootstrap.iRAM$recovery.time.reps)
 
-## ---- warning = FALSE, fig.width = 8, fig.height =6----------------------
+## ---- warning = FALSE, fig.width = 8, fig.height =6---------------------------
 true.iRAM <- iRAM(
   model.fit= NULL,
   beta = true.beta, 
@@ -195,7 +196,7 @@ plot_time_profile(true.iRAM$time.series.data,
                   xupper = 25)
 
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 
 sum.diff <- 0
 for (row in 1:nrow(bootstrap.iRAM$recovery.time))
@@ -229,7 +230,7 @@ for (col in 1:(var.number^2))
 
   
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # metrics
 true.iRAM$recovery.time # true value
 bootstrap.iRAM$mean # estimated mean
@@ -237,14 +238,14 @@ RMSE
 RB
 SD 
 
-## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+## ---- fig.width = 8, fig.height =6, warning = F-------------------------------
 iRAM_equilibrium_value <- iRAM_equilibrium(beta = mdl$beta,
                          var.number = var.number, 
                          lag.order = lag.order)
 
 iRAM_equilibrium_value
 
-## ---- fig.width = 8, fig.height =6, warning = F--------------------------
+## ---- fig.width = 8, fig.height =6, warning = F-------------------------------
 plot_integrated_time_profile(beta.matrix = mdl$beta, 
                              var.number = 3, 
                              lag.order = 1)

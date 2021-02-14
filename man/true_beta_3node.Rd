@@ -4,7 +4,9 @@
 \name{true_beta_3node}
 \alias{true_beta_3node}
 \title{The true beta matrix (6 by 6) used in simulation.}
-\format{An object of class \code{matrix} with 6 rows and 6 columns.}
+\format{
+An object of class \code{matrix} (inherits from \code{array}) with 6 rows and 6 columns.
+}
 \usage{
 true_beta_3node
 }

@@ -183,7 +183,8 @@ lag.order <- 1 # lag order of the model
 model.fit <- uSEM(var.number, 
                   time.series,
                   lag.order, 
-                  verbose = FALSE, 
+                  # verbose = FALSE, #published code
+                  verbose = TRUE, #test
                   trim = TRUE)
 
 ```

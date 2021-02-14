@@ -206,7 +206,14 @@ compute.confidence.interval <- function(dataset, mean)
   n.obs <- length(dataset)
   cutoff.obs <- round(n.obs * .025,0)
   dataset <- data.frame(dataset)
-  dataset <- dataset[order(dataset),]
+
+
+  # dataset <- dataset[order(dataset),] # code before 1/22/2021
+  # print("inside corrected code!")
+  # print(str(dataset))
+  names(dataset) <- "recovery.time" # code after 1/22/2021
+  dataset <- dataset[order(dataset$recovery.time),] # code after 1/22/2021
+
   lower <- dataset[cutoff.obs + 1]
   upper <- dataset[n.obs - cutoff.obs + 1]
   confidence.interval <- list(lower, upper)

@@ -4,7 +4,9 @@
 \name{simts_2node}
 \alias{simts_2node}
 \title{Simulated bivariate time-series data}
-\format{An object of class \code{data.frame} with 200 rows and 2 columns.}
+\format{
+An object of class \code{data.frame} with 200 rows and 2 columns.
+}
 \usage{
 simts_2node
 }

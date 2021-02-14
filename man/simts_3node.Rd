@@ -4,7 +4,9 @@
 \name{simts_3node}
 \alias{simts_3node}
 \title{Simulated 3-variate time-series data}
-\format{An object of class \code{data.frame} with 100 rows and 3 columns.}
+\format{
+An object of class \code{data.frame} with 100 rows and 3 columns.
+}
 \usage{
 simts_3node
 }

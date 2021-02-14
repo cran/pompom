@@ -4,7 +4,9 @@
 \name{bootstrap_iRAM_3node}
 \alias{bootstrap_iRAM_3node}
 \title{Bootstrapped iRAM (including replications of iRAM and corresponding time profiles) for the 3-variate time-series (simts)}
-\format{An object of class \code{list} of length 5.}
+\format{
+An object of class \code{list} of length 5.
+}
 \usage{
 bootstrap_iRAM_3node
 }

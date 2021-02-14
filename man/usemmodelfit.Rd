@@ -4,7 +4,9 @@
 \name{usemmodelfit}
 \alias{usemmodelfit}
 \title{Model fitbased on similated time-series by uSEM.}
-\format{An object of class \code{lavaan} of length 1.}
+\format{
+An object of class \code{lavaan} of length 1.
+}
 \usage{
 usemmodelfit
 }
